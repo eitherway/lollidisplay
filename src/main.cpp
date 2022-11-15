@@ -1,44 +1,44 @@
-#include <WiFi.h>
-#include <ESPmDNS.h>
+#include <ESP8266mDNS.h>
+#include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <Wire.h>
 #include <BH1750.h>
 #include <WEMOS_SHT3X.h>
 #include "secrets.h"
-//#include <AirGradient.h>
+#include <AirGradient.h>
 
 #define LED 2
 // performs String Concat in Compiler
 #define mqttTopic(name) ("home_automation/" MQTT_LOCATION "/" name)
+#define HOSTNAME "lolli" MQTT_LOCATION
 
 SHT3X sht30(0x45);
 BH1750 lightMeter;
 AirGradient ag = AirGradient();
 
 WiFiClient wlanclient;
-PubSubClient mqttClient(wlanclient, SECRET_MQTT_SERVER);
+PubSubClient mqttClient(wlanclient);
 
-void mqttCallback(const MQTT::Publish &pub) {
-    if (pub.has_stream()) {
+
+void mqttCallback(char* topic, byte* payload, unsigned int length) {
+    if (length > 50) {
         Serial.println("Error! MQTT Payload is a stream.");
         return;
     }
 
-    String topic = pub.topic();
-    String payload = pub.payload_string();
-
     Serial.print("Message arrived on Topic:");
     Serial.print(topic);
-    Serial.print(" => ");
-    Serial.println(payload);
 
 #if ENABLED_LED_CONTROL
     if (topic.equals(mqttTopic("led"))) {
-        if (payload.equals("ON")) {
-            digitalWrite(LED, LOW);
-        } else if (payload.equals("OFF")) {
-            digitalWrite(LED, HIGH); // LED off
-        }
+      // Switch on the LED if an 1 was received as first character
+      if ((char)payload[0] == '1') {
+        digitalWrite(BUILTIN_LED, LOW);   // Turn the LED on (Note that LOW is the voltage level
+        // but actually the LED is on; this is because
+        // it is active low on the ESP-01)
+      } else {
+        digitalWrite(BUILTIN_LED, HIGH);  // Turn the LED off by making the voltage HIGH
+      }
     }
 #endif
 }
@@ -47,6 +47,10 @@ void setup() {
     // Initialize Serial
     Serial.begin(9600);
     Serial.println("");
+
+    // Init MQTT
+    mqttClient.setServer(SECRET_MQTT_SERVER, 1883);
+    mqttClient.setCallback(mqttCallback);
 
     // Initialize CO2
 #if ENABLED_CO2
@@ -75,7 +79,7 @@ void loop() {
         Serial.println("Connecting...");
 
         //Set new hostname
-        WiFi.hostname('lolli' + MQTT_LOCATION);
+        WiFi.hostname(HOSTNAME);
 
         WiFi.mode(WIFI_STA); //Indicate to act as wifi_client only
         WiFi.begin(SECRET_SSID, SECRET_PASS);
@@ -89,22 +93,19 @@ void loop() {
         Serial.print("Connected, IP address: ");
         Serial.println(WiFi.localIP());
         Serial.print("Connected, Hostname: ");
-        Serial.println(WiFi.hostname());
     }
 
     if (WiFi.status() == WL_CONNECTED) {
         if (!mqttClient.connected()) {
-            if (mqttClient.connect("ESP_Client")) {
+            // attempt to connect
+            if (mqttClient.connect(HOSTNAME)) {
                 Serial.println("Connected to MQTT Broker");
-                mqttClient.set_callback(mqttCallback);
 
                 // Subscribe to LED Control
 #if ENABLED_LED_CONTROL
                 mqttClient.subscribe(mqttTopic("led"));
 #endif
-            }
-
-            if (!mqttClient.connected()) {
+            } else {
                 Serial.println("MQTT Broker connection failed");
                 delay(1000);
                 return;
@@ -142,11 +143,9 @@ void loop() {
                 dtostrf(temperature, 7 - 1, 2, temp_string);
                 dtostrf(humidity, 7 - 1, 2, humid_string);
 
-                MQTT::Publish temp_pub(mqttTopic("temperature"), temp_string);
-                mqttClient.publish(temp_pub);
+                mqttClient.publish(mqttTopic("temperature"), temp_string);
 
-                MQTT::Publish humid_pub(mqttTopic("humidity"), humid_string);
-                mqttClient.publish(humid_pub);
+                mqttClient.publish(mqttTopic("humidity"), humid_string);
             }
         } else {
             Serial.println("Error! Reading sensor 'SHT30'/'Temperature + Humidity' data failed.");
@@ -176,8 +175,7 @@ void loop() {
                 char light_string[9]; // 6 value chars + 1 dot char + 1 sign char + 1 null
                 dtostrf(lux, 9 - 1, 1, light_string);
 
-                MQTT::Publish light_pub(mqttTopic ("light"), light_string);
-                mqttClient.publish(light_pub);
+                mqttClient.publish(mqttTopic("light"), light_string);
             }
         }
 #endif
@@ -196,8 +194,7 @@ void loop() {
                 Serial.print(Char_CO2);
                 Serial.println(" ppm");
 
-                MQTT::Publish co2_pub(mqttTopic ("co2"), Char_CO2);
-                mqttClient.publish(co2_pub);
+                mqttClient.publish(mqttTopic("co2"), Char_CO2);
             } else {
                 Serial.println("Error! 'CO2' reading out of range");
             }
