@@ -12,6 +12,9 @@
 #define mqttTopic(name) ("home_automation/" MQTT_LOCATION "/" name)
 #define HOSTNAME "lolli" MQTT_LOCATION
 
+#if ENABLED_PIR
+const int PIR = D3;
+#endif
 SHT3X sht30(0x45);
 BH1750 lightMeter;
 AirGradient ag = AirGradient();
@@ -48,9 +51,18 @@ void setup() {
     Serial.begin(9600);
     Serial.println("");
 
+    // Set WiFi hostname
+    WiFi.mode(WIFI_STA); //Indicate to act as wifi_client only
+    WiFi.hostname(HOSTNAME); // needs to be set after Wifi.mode before Wifi.begin
+
     // Init MQTT
     mqttClient.setServer(SECRET_MQTT_SERVER, 1883);
     mqttClient.setCallback(mqttCallback);
+
+    // Initialize PIR
+#if ENABLED_PIR
+    pinMode(PIR, INPUT);
+#endif
 
     // Initialize CO2
 #if ENABLED_CO2
@@ -78,10 +90,6 @@ void loop() {
     if (WiFi.status() != WL_CONNECTED) {
         Serial.println("Connecting...");
 
-        //Set new hostname
-        WiFi.hostname(HOSTNAME);
-
-        WiFi.mode(WIFI_STA); //Indicate to act as wifi_client only
         WiFi.begin(SECRET_SSID, SECRET_PASS);
 
         if (WiFi.waitForConnectResult() != WL_CONNECTED) {
@@ -92,7 +100,6 @@ void loop() {
 
         Serial.print("Connected, IP address: ");
         Serial.println(WiFi.localIP());
-        Serial.print("Connected, Hostname: ");
     }
 
     if (WiFi.status() == WL_CONNECTED) {
@@ -119,6 +126,17 @@ void loop() {
         /*
          * setup done; read and publish values
          */
+
+#if ENABLED_PIR
+        int PIRState = digitalRead(PIR);
+        if (PIRState == HIGH) {
+            Serial.println("Movement: yes");
+            mqttClient.publish(mqttTopic("movement"), "1");
+        } else {
+            Serial.println("Movement: no");
+            mqttClient.publish(mqttTopic("movement"), "0");
+        }
+#endif
 
         // Read and publish temperature and humidity to MQTT
 #if ENABLED_TEMP
