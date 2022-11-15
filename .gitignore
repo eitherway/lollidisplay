@@ -1,0 +1,5 @@
+.pio
+.idea
+CMakeListsPrivate.txt
+cmake-build-*/ 
+include/secrets.h
