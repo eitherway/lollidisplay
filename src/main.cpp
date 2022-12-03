@@ -6,6 +6,7 @@
 #include <WEMOS_SHT3X.h>
 #include <AirGradient.h>
 #include <LOLIN_HP303B.h>
+#include <Adafruit_SGP30.h>
 
 #include "secrets.h"
 #include "secrets-desk.h"
@@ -16,6 +17,7 @@
 #define mqttTopic(name) ("home_automation/" MQTT_LOCATION "/" name)
 #define HOSTNAME "lolli" MQTT_LOCATION
 
+// Sensors
 #if ENABLED_PIR
 const int PIR = D3;
 #endif
@@ -23,7 +25,9 @@ SHT3X sht30(0x45);
 BH1750 lightMeter;
 AirGradient ag = AirGradient();
 LOLIN_HP303B HP303BPressureSensor;
+Adafruit_SGP30 sgp30;
 
+// General Stuff
 WiFiClient wlanclient;
 PubSubClient mqttClient(wlanclient);
 
@@ -93,6 +97,11 @@ void setup() {
 #if ENABLED_PRESSURE
     HP303BPressureSensor.begin();
 #endif
+
+    // Initialize TVOC & eCO2 Sensor
+#if ENABLED_TVOC
+    sgp30.begin();
+#endif
 }
 
 void loop() {
@@ -156,7 +165,7 @@ void loop() {
 
             Serial.print("Temperature in Celsius: ");
             Serial.print(temperature);
-            Serial.print(" Relative Humidity: ");
+            Serial.print("\tRelative Humidity: ");
             Serial.println(humidity);
 
             if (humidity > 90 || temperature > 60 || temperature < -15 || humidity < 10) {
@@ -257,6 +266,28 @@ void loop() {
             sprintf(Char_Pressure, "%d", pressure);
 
             mqttClient.publish(mqttTopic("pressure"), Char_Pressure);
+        }
+#endif
+
+#if ENABLED_TVOC
+        if (sgp30.IAQmeasure()) {
+            // Read Success
+            Serial.print("eCO2: ");
+            Serial.print(sgp30.eCO2);
+            Serial.print(" ppm\tTVOC: ");
+            Serial.print(sgp30.TVOC);
+            Serial.println(" ppb");
+
+            char Char_ECO2[20];
+            char Char_TVOC[20];
+
+            sprintf(Char_ECO2, "%d", sgp30.eCO2);
+            sprintf(Char_TVOC, "%d", sgp30.TVOC);
+
+            mqttClient.publish(mqttTopic("eco2"), Char_ECO2);
+            mqttClient.publish(mqttTopic("tvoc"), Char_TVOC);
+        } else {
+            Serial.print("ERROR! 'TVOC' Sensor failed.");
         }
 #endif
 
