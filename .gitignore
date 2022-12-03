@@ -2,4 +2,6 @@
 .idea
 CMakeListsPrivate.txt
 cmake-build-*/ 
+include/secrets-floor.h
+include/secrets-desk.h
 include/secrets.h

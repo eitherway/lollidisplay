@@ -7,4 +7,5 @@
 #define ENABLED_LED_CONTROL 0
 #define ENABLED_TEMP 1
 #define ENABLED_PIR 0
+#define ENABLED_PRESSURE 0
 

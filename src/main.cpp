@@ -4,8 +4,12 @@
 #include <Wire.h>
 #include <BH1750.h>
 #include <WEMOS_SHT3X.h>
-#include "secrets.h"
 #include <AirGradient.h>
+#include <LOLIN_HP303B.h>
+
+#include "secrets.h"
+#include "secrets-desk.h"
+//#include "secrets-floor.h"
 
 #define LED 2
 // performs String Concat in Compiler
@@ -18,12 +22,13 @@ const int PIR = D3;
 SHT3X sht30(0x45);
 BH1750 lightMeter;
 AirGradient ag = AirGradient();
+LOLIN_HP303B HP303BPressureSensor;
 
 WiFiClient wlanclient;
 PubSubClient mqttClient(wlanclient);
 
 
-void mqttCallback(char* topic, byte* payload, unsigned int length) {
+void mqttCallback(char *topic, byte *payload, unsigned int length) {
     if (length > 50) {
         Serial.println("Error! MQTT Payload is a stream.");
         return;
@@ -82,6 +87,11 @@ void setup() {
     // Initialize Lightmeter
 #if ENABLED_LIGHT
     lightMeter.begin();
+#endif
+
+    // Initialize Pressure Sensor
+#if ENABLED_PRESSURE
+    HP303BPressureSensor.begin();
 #endif
 }
 
@@ -218,6 +228,35 @@ void loop() {
             }
         } else {
             Serial.println("Error! Reading sensor 'CO2' data failed.");
+        }
+#endif
+
+#if ENABLED_PRESSURE
+        //the commented line below does exactly the same as the one above, but you can also config the precision
+        //oversampling can be a value from 0 to 7
+        //the HP303B will perform 2^oversampling internal temperature measurements and combine them to one result with higher precision
+        //measurements with higher precision take more time, consult datasheet for more information
+        //Pressure measurement behaves like temperature measurement
+        //ret = HP303BPressureSensor.measurePressureOnce(pressure, oversampling);
+
+        int32_t pressure;
+        int16_t ret = HP303BPressureSensor.measurePressureOnce(pressure, 1);
+        if (ret != 0) {
+            //Something went wrong.
+            //Look at the library code for more information about return codes
+            Serial.print("ERROR! 'Pressure' Sensor failed. ret = ");
+            Serial.println(ret);
+        } else {
+            // Read Success
+            Serial.print("Pressure: ");
+            Serial.print(pressure);
+            Serial.println(" Pascal");
+
+            char Char_Pressure[20];
+
+            sprintf(Char_Pressure, "%d", pressure);
+
+            mqttClient.publish(mqttTopic("pressure"), Char_Pressure);
         }
 #endif
 
