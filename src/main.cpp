@@ -1,11 +1,12 @@
-#include <WiFi.h>
-//#include <ESP8266WiFi.h>
+//#include <WiFi.h>
+#include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <Wire.h>
 #include <BH1750.h>
 #include <WEMOS_SHT3X.h>
 #include <LOLIN_HP303B.h>
 #include <Adafruit_SGP30.h>
+#include <SSD1306Wire.h>
 
 //#include "secrets.h"
 //#include "secrets-desk.h"
@@ -20,6 +21,9 @@
 // Sensors
 #if ENABLED_PIR
 const int PIR = D3;
+#endif
+#if ENABLED_DISPLAY
+SSD1306Wire display(0x3D, SDA, SCL);
 #endif
 SHT3X sht30(0x45);
 BH1750 lightMeter;
@@ -41,8 +45,8 @@ void mqttCallback(char *topic, byte *payload, unsigned int length) {
         return;
     }
 
-    Serial.print("Message arrived on Topic:");
-    Serial.print(topic);
+    Serial.print("Message arrived on Topic: ");
+    Serial.println(topic);
 
 #if ENABLED_LED_CONTROL
     if (topic.equals(mqttTopic("led"))) {
@@ -55,6 +59,23 @@ void mqttCallback(char *topic, byte *payload, unsigned int length) {
         digitalWrite(BUILTIN_LED, HIGH);  // Turn the LED off by making the voltage HIGH
       }
     }
+#endif
+
+#if ENABLED_DISPLAY_MQTT
+    //if (strcmp(topic, "home_automation/test/eco2")) {
+
+        Serial.println("Display should refresh");
+        char chars[length + 1];
+        memcpy(chars, payload, length);
+        chars[length] = '\0';
+
+        display.clear();
+        display.setFont(ArialMT_Plain_16);
+        display.drawString(0, 10, "CO2");
+        display.setFont(ArialMT_Plain_24);
+        display.drawString(0, 26, chars);
+        display.display();
+    //}
 #endif
 }
 
@@ -106,6 +127,13 @@ void setup() {
 #if ENABLED_TVOC
     sgp30.begin();
 #endif
+
+#if ENABLED_DISPLAY
+    display.init();
+
+    display.flipScreenVertically();
+    display.setTextAlignment(TEXT_ALIGN_LEFT);
+#endif
 }
 
 void loop() {
@@ -115,7 +143,7 @@ void loop() {
 
         WiFi.begin(SECRET_SSID, SECRET_PASS);
         //You have to add this code after running WiFi.softAP or WiFi.begin for the Wifi to work.
-        WiFi.setTxPower(WIFI_POWER_8_5dBm);             //https://www.wemos.cc/en/latest/tutorials/c3/get_started_with_arduino_c3.html#wifi
+        //WiFi.setTxPower(WIFI_POWER_8_5dBm);             //https://www.wemos.cc/en/latest/tutorials/c3/get_started_with_arduino_c3.html#wifi
 
         if (WiFi.waitForConnectResult() != WL_CONNECTED) {
             Serial.println("Error! Wifi connection failure");
@@ -133,7 +161,9 @@ void loop() {
             // attempt to connect
             if (mqttClient.connect(HOSTNAME)) {
                 Serial.println("Connected to MQTT Broker");
-
+#if ENABLED_DISPLAY_MQTT
+                mqttClient.subscribe("home_automation/test/eco2");
+#endif
                 // Subscribe to LED Control
 #if ENABLED_LED_CONTROL
                 mqttClient.subscribe(mqttTopic("led"));
@@ -147,7 +177,6 @@ void loop() {
         }
 
         // Connected to Wi-Fi and MQTT
-
         mqttClient.loop();
 
         /*
