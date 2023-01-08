@@ -4,4 +4,5 @@ CMakeListsPrivate.txt
 cmake-build-*/ 
 include/secrets-floor.h
 include/secrets-desk.h
+include/secrets-papa.h
 include/secrets.h

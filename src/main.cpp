@@ -1,16 +1,16 @@
-#include <ESP8266mDNS.h>
-#include <ESP8266WiFi.h>
+#include <WiFi.h>
+//#include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <Wire.h>
 #include <BH1750.h>
 #include <WEMOS_SHT3X.h>
-#include <AirGradient.h>
 #include <LOLIN_HP303B.h>
 #include <Adafruit_SGP30.h>
 
-#include "secrets.h"
-#include "secrets-desk.h"
+//#include "secrets.h"
+//#include "secrets-desk.h"
 //#include "secrets-floor.h"
+#include "secrets-papa.h"
 
 #define LED 2
 // performs String Concat in Compiler
@@ -23,11 +23,14 @@ const int PIR = D3;
 #endif
 SHT3X sht30(0x45);
 BH1750 lightMeter;
+#if ENABLED_CO2
 AirGradient ag = AirGradient();
+#endif
 LOLIN_HP303B HP303BPressureSensor;
 Adafruit_SGP30 sgp30;
 
 // General Stuff
+IPAddress server(192, 168, 8, 102);
 WiFiClient wlanclient;
 PubSubClient mqttClient(wlanclient);
 
@@ -60,12 +63,13 @@ void setup() {
     Serial.begin(9600);
     Serial.println("");
 
+    Serial.println(SECRET_SSID);
     // Set WiFi hostname
     WiFi.mode(WIFI_STA); //Indicate to act as wifi_client only
     WiFi.hostname(HOSTNAME); // needs to be set after Wifi.mode before Wifi.begin
 
     // Init MQTT
-    mqttClient.setServer(SECRET_MQTT_SERVER, 1883);
+    mqttClient.setServer(server, 1883);
     mqttClient.setCallback(mqttCallback);
 
     // Initialize PIR
@@ -110,9 +114,12 @@ void loop() {
         Serial.println("Connecting...");
 
         WiFi.begin(SECRET_SSID, SECRET_PASS);
+        //You have to add this code after running WiFi.softAP or WiFi.begin for the Wifi to work.
+        WiFi.setTxPower(WIFI_POWER_8_5dBm);             //https://www.wemos.cc/en/latest/tutorials/c3/get_started_with_arduino_c3.html#wifi
 
         if (WiFi.waitForConnectResult() != WL_CONNECTED) {
             Serial.println("Error! Wifi connection failure");
+            Serial.println(WiFi.status());
             delay(1000);
             return;
         }
@@ -133,6 +140,7 @@ void loop() {
 #endif
             } else {
                 Serial.println("MQTT Broker connection failed");
+                Serial.println(mqttClient.state());
                 delay(1000);
                 return;
             }
