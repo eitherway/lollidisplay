@@ -38,6 +38,15 @@ IPAddress server(192, 168, 8, 102);
 WiFiClient wlanclient;
 PubSubClient mqttClient(wlanclient);
 
+String convertByteArrayToString(byte* a, unsigned int size)
+{
+    int i;
+    String s = "";
+    for (i = 0; i < size; i++) {
+       s = s + (char) a[i];
+    }
+    return s;
+}
 
 void mqttCallback(char *topic, byte *payload, unsigned int length) {
     if (length > 50) {
@@ -62,20 +71,18 @@ void mqttCallback(char *topic, byte *payload, unsigned int length) {
 #endif
 
 #if ENABLED_DISPLAY_MQTT
-    //if (strcmp(topic, "home_automation/test/eco2")) {
+    if (strcmp(topic, "home_automation/test/eco2") == 0) {
 
         Serial.println("Display should refresh");
-        char chars[length + 1];
-        memcpy(chars, payload, length);
-        chars[length] = '\0';
+        String eco2 = convertByteArrayToString(payload, length);
 
         display.clear();
         display.setFont(ArialMT_Plain_16);
         display.drawString(0, 10, "CO2");
         display.setFont(ArialMT_Plain_24);
-        display.drawString(0, 26, chars);
+        display.drawString(0, 26, eco2 + " ppm");
         display.display();
-    //}
+    }
 #endif
 }
 
