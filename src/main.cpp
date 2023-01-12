@@ -1,9 +1,12 @@
 #ifdef ESP8266
+
 #include <ESP8266WiFi.h>
+
 #endif
 #ifdef ESP32
 #include <WiFi.h>
 #endif
+
 #include <PubSubClient.h>
 #include <Wire.h>
 #include <BH1750.h>
@@ -11,11 +14,17 @@
 #include <LOLIN_HP303B.h>
 #include <Adafruit_SGP30.h>
 #include <SSD1306Wire.h>
+#include <AirGradient.h>
 
-//#include "secrets.h"
-//#include "secrets-desk.h"
+#include "secrets.h"
+#include "secrets-desk.h"
 //#include "secrets-floor.h"
-#include "secrets-papa.h"
+//#include "secrets-papa.h"
+
+// local code
+#if ENABLED_EPD
+#include "display.h"
+#endif
 
 #define LED 2
 // performs String Concat in Compiler
@@ -38,16 +47,15 @@ LOLIN_HP303B HP303BPressureSensor;
 Adafruit_SGP30 sgp30;
 
 // General Stuff
-IPAddress server(192, 168, 8, 102);
+//IPAddress server(192, 168, 8, 102);
 WiFiClient wlanclient;
 PubSubClient mqttClient(wlanclient);
 
-String convertByteArrayToString(byte* a, unsigned int size)
-{
+String convertByteArrayToString(byte *a, unsigned int size) {
     int i;
     String s = "";
     for (i = 0; i < size; i++) {
-       s = s + (char) a[i];
+        s = s + (char) a[i];
     }
     return s;
 }
@@ -101,7 +109,7 @@ void setup() {
     WiFi.hostname(HOSTNAME); // needs to be set after Wifi.mode before Wifi.begin
 
     // Init MQTT
-    mqttClient.setServer(server, 1883);
+    mqttClient.setServer(SECRET_MQTT_SERVER, 1883);
     mqttClient.setCallback(mqttCallback);
 
     // Initialize PIR
@@ -144,6 +152,10 @@ void setup() {
 
     display.flipScreenVertically();
     display.setTextAlignment(TEXT_ALIGN_LEFT);
+#endif
+
+#if ENABLED_EPD
+    initDisplay();
 #endif
 }
 
@@ -280,6 +292,9 @@ void loop() {
                 Serial.println(" ppm");
 
                 mqttClient.publish(mqttTopic("co2"), Char_CO2);
+#if ENABLED_EPD
+                refreshDisplay(CO2);
+#endif
             } else {
                 Serial.println("Error! 'CO2' reading out of range");
             }
