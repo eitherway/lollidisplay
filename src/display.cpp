@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <sntp.h>
 #include "display.h"
+#include "Bitmaps.h"
 
 uint32 last_refresh_timestamp = 0;
 int last_co2 = 0;
@@ -33,7 +34,7 @@ void refreshDisplay(int co2) {
     }
 
     unsigned int co2Diff = absVal(co2 - last_co2);
-    if ((co2 > 1000 && last_co2 < 1000) || co2Diff > 300) {
+    if ((co2 > 1000 && last_co2 < 1000) || co2Diff > 200) {
         refreshDisplay = true;
     }
 
@@ -43,19 +44,17 @@ void refreshDisplay(int co2) {
 
     // refresh display
     EPD.clearBuffer();
-    EPD.fillScreen(EPD_WHITE);
-    EPD.setTextSize(2);
-    EPD.setTextColor(EPD_BLACK);
-    EPD.setCursor(10, 50);
-    EPD.println("CO2:");
+    EPD.drawBitmap(0,0,epd_bitmap_epaper_dashboard,250,122,EPD_WHITE, EPD_BLACK);
 
+    EPD.setTextColor(EPD_BLACK);
     if (co2 > 1000) {
         EPD.setTextColor(EPD_RED);
     }
 
-    EPD.setCursor(10, 50 + 2 * 10);
+    EPD.setTextSize(2);
+    EPD.setCursor(12, 87);
     String co2Str = String(co2);
-    EPD.println(co2Str + " ppm");
+    EPD.println(co2Str);
 
     EPD.display();
 
