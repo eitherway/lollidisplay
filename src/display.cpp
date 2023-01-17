@@ -44,15 +44,49 @@ void refreshDisplay(int co2) {
 
     // refresh display
     EPD.clearBuffer();
-    EPD.drawBitmap(0,0,epd_bitmap_epaper_dashboard,250,122,EPD_WHITE, EPD_BLACK);
+    // somehow bg-color & color need to be switched
+    EPD.drawBitmap(0, 0, epd_bitmap_epaper_dashboard, 250, 122, EPD_WHITE, EPD_BLACK);
 
+    // print Weather Info
     EPD.setTextColor(EPD_BLACK);
+    String weatherStr = "Winds subsiding with flurries.";
+    EPD.setTextSize(2);
+
+    // 19 chars fit in a row in my bitmap
+    // each char is 12x16 with this default font
+    const unsigned int numOfCharsThatFitInRow = 19;
+
+    if (weatherStr.length() > numOfCharsThatFitInRow) {
+        String hardcutRow1 = weatherStr.substring(0, numOfCharsThatFitInRow - 1);
+        size_t posSpace = hardcutRow1.lastIndexOf(" ");
+        // this lets the row end on the end of a word
+        String row1 = weatherStr.substring(0, posSpace);
+
+        String row2 = weatherStr.substring(posSpace + 1);
+
+        if (row2.length() > numOfCharsThatFitInRow) {
+            // row2 exceeds limit, hardcut at char limit
+            row2 = weatherStr.substring(posSpace + 1, posSpace + numOfCharsThatFitInRow + 1);
+        }
+
+        EPD.setCursor(10, 27);
+        EPD.println(row1);
+        EPD.setCursor(10, 43);
+        EPD.println(row2);
+    } else {
+        EPD.setCursor(10, 27);
+        EPD.println(weatherStr);
+    }
+
+    // print CO2 value
     if (co2 > 1000) {
         EPD.setTextColor(EPD_RED);
+    } else {
+        EPD.setTextColor(EPD_BLACK);
     }
 
     EPD.setTextSize(2);
-    EPD.setCursor(12, 87);
+    EPD.setCursor(10, 96);
     String co2Str = String(co2);
     EPD.println(co2Str);
 

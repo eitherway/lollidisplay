@@ -13,5 +13,7 @@ Create an Image in Affinity Designer and use the following settings:
 Transform with:
 https://javl.github.io/image2cpp/
 
+This project uses [Feather Icons](https://feathericons.com/) for artwork.
+
 Future (add colors to bitmaps):
 https://learn.adafruit.com/preparing-graphics-for-e-ink-displays/overview
