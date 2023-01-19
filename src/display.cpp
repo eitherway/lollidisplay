@@ -2,6 +2,7 @@
 #include <sntp.h>
 #include "display.h"
 #include "Bitmaps.h"
+#include "secrets.h"
 
 uint32 last_refresh_timestamp = 0;
 int last_co2 = 0;
@@ -17,7 +18,7 @@ unsigned int absVal(int x) {
 }
 
 void initDisplay() {
-    configTime(1, 3600, "192.168.3.1");
+    configTime(1, 3600, SECRET_NTP_SERVER);
     EPD.begin();
     EPD.setRotation(0);
 }
@@ -59,6 +60,7 @@ void refreshDisplay(int co2) {
     if (weatherStr.length() > numOfCharsThatFitInRow) {
         String hardcutRow1 = weatherStr.substring(0, numOfCharsThatFitInRow - 1);
         size_t posSpace = hardcutRow1.lastIndexOf(" ");
+
         // this lets the row end on the end of a word
         String row1 = weatherStr.substring(0, posSpace);
 

@@ -1,11 +1,14 @@
 #define SECRET_SSID "WLAN"
 #define SECRET_PASS "PASSWORD"
 #define SECRET_MQTT_SERVER "server.lan"
+#define SECRET_NTP_SERVER "192.168.1.1"
 #define MQTT_LOCATION "desk"
-#define ENABLED_CO2 1
-#define ENABLED_LIGHT 1
+#define ENABLED_CO2 0
+#define ENABLED_LIGHT 0
 #define ENABLED_LED_CONTROL 0
-#define ENABLED_TEMP 1
+#define ENABLED_TEMP 0
 #define ENABLED_PIR 0
 #define ENABLED_PRESSURE 0
-
+#define ENABLED_TVOC 0
+#define ENABLED_EPD 0
+#define ENABLED_DISPLAY 0

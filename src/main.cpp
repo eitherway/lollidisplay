@@ -1,7 +1,5 @@
 #ifdef ESP8266
-
 #include <ESP8266WiFi.h>
-
 #endif
 #ifdef ESP32
 #include <WiFi.h>
@@ -165,9 +163,10 @@ void loop() {
         Serial.println("Connecting...");
 
         WiFi.begin(SECRET_SSID, SECRET_PASS);
-        //You have to add this code after running WiFi.softAP or WiFi.begin for the Wifi to work.
-        //WiFi.setTxPower(WIFI_POWER_8_5dBm);             //https://www.wemos.cc/en/latest/tutorials/c3/get_started_with_arduino_c3.html#wifi
-
+#ifdef ARDUINO_LOLIN_C3_MINI
+        // You have to add this code after running WiFi.softAP or WiFi.begin for the Wifi to work.
+        WiFi.setTxPower(WIFI_POWER_8_5dBm);             // https://www.wemos.cc/en/latest/tutorials/c3/get_started_with_arduino_c3.html#wifi
+#endif
         if (WiFi.waitForConnectResult() != WL_CONNECTED) {
             Serial.println("Error! Wifi connection failure");
             Serial.println(WiFi.status());
@@ -304,14 +303,9 @@ void loop() {
 #endif
 
 #if ENABLED_PRESSURE
-        //the commented line below does exactly the same as the one above, but you can also config the precision
-        //oversampling can be a value from 0 to 7
-        //the HP303B will perform 2^oversampling internal temperature measurements and combine them to one result with higher precision
-        //measurements with higher precision take more time, consult datasheet for more information
-        //Pressure measurement behaves like temperature measurement
-        //ret = HP303BPressureSensor.measurePressureOnce(pressure, oversampling);
-
         int32_t pressure;
+        // second parameter is oversampling, higher values lead to higher precision, but take more time
+        // sensor will take 2^oversampling and combine them
         int16_t ret = HP303BPressureSensor.measurePressureOnce(pressure, 1);
         if (ret != 0) {
             //Something went wrong.
@@ -354,7 +348,7 @@ void loop() {
         }
 #endif
 
-        // Do measurements every second
+        // Delay each Measurement a bit
         delay(2000);
     }
 }
