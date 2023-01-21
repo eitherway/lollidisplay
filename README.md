@@ -14,7 +14,7 @@
 - 5V to G+
 - GND (Ground) to G0
 - D4 to UART_TxD
-- D3 to UART_RxD
+- D3 to UART_RxD (beware: in software these are swapped, because receive pin (RX) of slave needs to be connected to send pin of master (TX))
 
 ### ePaper
 - GND to EPD_GND

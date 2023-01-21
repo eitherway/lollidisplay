@@ -1,5 +1,7 @@
 #ifdef ESP8266
+
 #include <ESP8266WiFi.h>
+
 #endif
 #ifdef ESP32
 #include <WiFi.h>
@@ -12,7 +14,6 @@
 #include <LOLIN_HP303B.h>
 #include <Adafruit_SGP30.h>
 #include <SSD1306Wire.h>
-#include <AirGradient.h>
 
 #include "secrets.h"
 #include "secrets-desk.h"
@@ -20,9 +21,8 @@
 //#include "secrets-papa.h"
 
 // local code
-#if ENABLED_EPD
 #include "display.h"
-#endif
+#include "CO2.h"
 
 #define LED 2
 // performs String Concat in Compiler
@@ -39,7 +39,7 @@ SSD1306Wire display(0x3D, SDA, SCL);
 SHT3X sht30(0x45);
 BH1750 lightMeter;
 #if ENABLED_CO2
-AirGradient ag = AirGradient();
+CO2 co2 = CO2();
 #endif
 LOLIN_HP303B HP303BPressureSensor;
 Adafruit_SGP30 sgp30;
@@ -117,7 +117,7 @@ void setup() {
 
     // Initialize CO2
 #if ENABLED_CO2
-    ag.CO2_Init();
+    co2.CO2_Init(D4, D3, 9600);
 #endif
 
     // Initialise LED
@@ -278,7 +278,7 @@ void loop() {
 
         // Read and publish CO2 Value
 #if ENABLED_CO2
-        int CO2 = ag.getCO2_Raw();
+        int CO2 = co2.getCO2_Raw();
         if (CO2 != -1 && CO2 != -2) {
             if (CO2 >= 0 && CO2 <= 4000) {
                 // read success
