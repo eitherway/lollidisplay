@@ -2,7 +2,39 @@
 
 **IMPORTANT NOTICE: This project is a little side project of mine designed for personal use. USE AT YOUR OWN DISCRETION.**
 
+## Wiring / Pins Used
 
+### I2C Sensors, Display: Light Sensor, SHT30, SGP30, HP303B 
+- D1 to SCL (Clock Signal)
+- D2 to SDA (Data Signal)
+- GND to GND
+- 3.3V to 3.3V
+
+### CO2
+- 5V to G+
+- GND (Ground) to G0
+- D4 to UART_TxD
+- D3 to UART_RxD
+
+### ePaper
+- GND to EPD_GND
+- 3.3V to 3.3V
+- RST to EPD_RST
+- D0 to EPD_CS 
+- D8 to EPD_DC (Data / Command Pin) 
+- D5 to EPD_CLK
+- D7 to EPD_MOSI
+
+## Sensor and Hardware Used
+
+Most of the sensors / hardware are from Lolin. 
+- [Lolin D1 Mini V4](https://www.wemos.cc/en/latest/d1/d1_mini.html)
+- [ePaper Display](https://www.wemos.cc/en/latest/d1_mini_shield/epd_2_13.html)
+- [SGP30](https://www.wemos.cc/en/latest/d1_mini_shield/sgp30.html)
+- [SHT30](https://www.wemos.cc/en/latest/d1_mini_shield/sht30.html)
+- [Ambient Light](https://www.wemos.cc/en/latest/d1_mini_shield/ambient_light.html)
+- [Barometric Pressure](https://www.wemos.cc/en/latest/d1_mini_shield/barometric_pressure.html)
+- senseAir S8 CO2 Sensor
 
 
 ## Security
