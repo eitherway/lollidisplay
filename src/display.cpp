@@ -4,7 +4,7 @@
 #include "Bitmaps.h"
 #include "secrets.h"
 
-uint32 last_refresh_timestamp = 0;
+unsigned int last_refresh_timestamp = 0;
 int last_co2 = 0;
 
 LOLIN_SSD1680 EPD(250, 122, EPD_MOSI, EPD_CLK, EPD_DC, EPD_RST, EPD_CS, EPD_BUSY); //IO
@@ -24,7 +24,12 @@ void initDisplay() {
 }
 
 void refreshDisplay(int co2) {
-    uint32 current_time = sntp_get_current_timestamp();
+#ifdef ESP8266
+    unsigned int current_time = sntp_get_current_timestamp();
+#endif
+#ifdef ESP32
+    unsigned int current_time = 0;
+#endif
 
     bool refreshDisplay = false;
     if ((current_time - 15 * 60) > last_refresh_timestamp) {
