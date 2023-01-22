@@ -12,6 +12,8 @@ The data is ingested via [Telegraf](https://github.com/influxdata/telegraf) from
 
 Feel free to use this project as an inspiration for your own ESP Project. Be aware that I coded this as a side project, so the Code Quality is not outstanding.
 
+To disable or enable the various sensors, please see `include/secrets.example.h`
+
 ## Wiring / Pins Used
 
 ### I2C Sensors, Display: Light Sensor, SHT30, SGP30, HP303B 
