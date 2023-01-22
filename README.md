@@ -1,6 +1,16 @@
-# Status display and air quality monitoring with an ESP32/ESP8266 
+# Status display and air quality monitoring (e.g. CO2, Temperature, Humidity, ...) with an ESP32/ESP8266 
 
-**IMPORTANT NOTICE: This project is a little side project of mine designed for personal use. USE AT YOUR OWN DISCRETION.**
+**IMPORTANT NOTICE: This is designed for personal use. USE AT YOUR OWN DISCRETION.**
+
+This is the code for a little side project of mine. It utilises a little ESP8266/ESP-C3 Board to collect data from sensors, send it to a Raspberry Pi and display some key information on a display. The data is sent via MQTT to a Raspberry Pi, where it is stored, monitored and visualized.
+
+Currently, the project uses an E-Paper display to show the current CO2 value and information about the weather:
+![ESP Photo](./assets/photo-result.jpg)
+
+The data is ingested via [Telegraf](https://github.com/influxdata/telegraf) from a [Mosquitto Server](https://mosquitto.org) into a [Prometheus Database](https://prometheus.io). The data can then be monitored and visualised in Grafana:
+![Grafana Visualization](./assets/grafana-visualization.jpg)
+
+Feel free to use this project as an inspiration for your own ESP Project. Be aware that I coded this as a side project, so the Code Quality is not outstanding.
 
 ## Wiring / Pins Used
 
