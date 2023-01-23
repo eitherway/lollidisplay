@@ -1,11 +1,4 @@
-#include <Arduino.h>
-#include <sntp.h>
 #include "display.h"
-#include "Bitmaps.h"
-#include "secrets.h"
-
-unsigned int last_refresh_timestamp = 0;
-int last_co2 = 0;
 
 LOLIN_SSD1680 EPD(250, 122, EPD_MOSI, EPD_CLK, EPD_DC, EPD_RST, EPD_CS, EPD_BUSY); //IO
 
@@ -17,13 +10,73 @@ unsigned int absVal(int x) {
     }
 }
 
-void initDisplay() {
+Display::Display() {
+
+};
+
+void Display::initDisplay(WiFiClient clientParam) {
     configTime(1, 3600, SECRET_NTP_SERVER);
     EPD.begin();
     EPD.setRotation(0);
+
+    client = clientParam;
 }
 
-void refreshDisplay(int co2) {
+void Display::setCO2(int co2Param) {
+    co2 = co2Param;
+}
+
+void Display::refreshWeatherInformation() {
+    if (!shouldRefreshWeather()) {
+        return;
+    }
+
+    HTTPClient http;
+
+    String serverPath = SECRET_COLLECTOR_SERVER "/weather";
+
+    // Your Domain name with URL path or IP address with path
+    http.begin(client, serverPath.c_str());
+
+    // Send HTTP GET request
+    int httpResponseCode = http.GET();
+
+    if (httpResponseCode == 200) {
+        weatherStr = http.getString();
+        Serial.println("Weather: " + weatherStr);
+    } else if (httpResponseCode > 0) {
+        Serial.print("HTTP Response code: ");
+        Serial.println(httpResponseCode);
+    } else {
+        Serial.print("HTTP Error code: ");
+        Serial.println(httpResponseCode);
+    }
+
+    // Free resources
+    http.end();
+}
+
+bool Display::shouldRefreshWeather() {
+#ifdef ESP8266
+    unsigned int current_time = sntp_get_current_timestamp();
+#endif
+#ifdef ESP32
+    unsigned int current_time = 0;
+#endif
+
+    bool shouldRefresh = false;
+    if ((current_time - 15 * 60) > last_weather_refresh_timestamp) {
+        // longer than 15min since last refresh
+        //Serial.println("Time: ");
+        //Serial.println(current_time);
+        shouldRefresh = true;
+    }
+
+    last_weather_refresh_timestamp = current_time;
+    return shouldRefresh;
+}
+
+bool Display::shouldRefreshDisplay() {
 #ifdef ESP8266
     unsigned int current_time = sntp_get_current_timestamp();
 #endif
@@ -39,10 +92,27 @@ void refreshDisplay(int co2) {
         refreshDisplay = true;
     }
 
-    unsigned int co2Diff = absVal(co2 - last_co2);
-    if ((co2 > 1000 && last_co2 < 1000) || co2Diff > 200) {
+    unsigned int co2Diff = absVal(co2 - displayedCO2);
+    if ((co2 > 1000 && displayedCO2 < 1000) || co2Diff > 200) {
         refreshDisplay = true;
     }
+
+    if (weatherStr != displayedWeatherStr) {
+        refreshDisplay = true;
+    }
+
+    if (co2 == -1) {
+        refreshDisplay = false;
+    }
+
+    // set refresh time
+    last_refresh_timestamp = current_time;
+
+    return refreshDisplay;
+}
+
+void Display::refreshDisplay() {
+    bool refreshDisplay = shouldRefreshDisplay();
 
     if (!refreshDisplay) {
         return;
@@ -55,7 +125,6 @@ void refreshDisplay(int co2) {
 
     // print Weather Info
     EPD.setTextColor(EPD_BLACK);
-    String weatherStr = "Winds subsiding with flurries.";
     EPD.setTextSize(2);
 
     // 19 chars fit in a row in my bitmap
@@ -99,8 +168,7 @@ void refreshDisplay(int co2) {
 
     EPD.display();
 
-    // set refresh time
-    last_refresh_timestamp = current_time;
-    last_co2 = co2;
+    displayedCO2 = co2;
+    displayedWeatherStr = weatherStr;
 }
 

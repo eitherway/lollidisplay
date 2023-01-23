@@ -49,6 +49,10 @@ Adafruit_SGP30 sgp30;
 WiFiClient wlanclient;
 PubSubClient mqttClient(wlanclient);
 
+#if ENABLED_EPD
+Display display = Display();
+#endif
+
 String convertByteArrayToString(byte *a, unsigned int size) {
     int i;
     String s = "";
@@ -153,7 +157,7 @@ void setup() {
 #endif
 
 #if ENABLED_EPD
-    initDisplay();
+    display.initDisplay(wlanclient);
 #endif
 }
 
@@ -291,8 +295,9 @@ void loop() {
                 Serial.println(" ppm");
 
                 mqttClient.publish(mqttTopic("co2"), Char_CO2);
+
 #if ENABLED_EPD
-                refreshDisplay(CO2);
+                display.setCO2(CO2);
 #endif
             } else {
                 Serial.println("Error! 'CO2' reading out of range");
@@ -348,6 +353,10 @@ void loop() {
         }
 #endif
 
+#if ENABLED_EPD
+        display.refreshWeatherInformation();
+        display.refreshDisplay();
+#endif
         // Delay each Measurement a bit
         delay(2000);
     }

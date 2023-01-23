@@ -2,6 +2,7 @@
 #define SECRET_PASS "PASSWORD"
 #define SECRET_MQTT_SERVER "server.lan"
 #define SECRET_NTP_SERVER "192.168.1.1"
+#define SECRET_COLLECTOR_SERVER "http://server.lan:8080"
 #define MQTT_LOCATION "desk"
 #define ENABLED_CO2 0
 #define ENABLED_LIGHT 0
