@@ -47,7 +47,7 @@ private:
     WiFiClient client;
 
     unsigned int last_refresh_timestamp = 0;
-    unsigned int last_weather_refresh_timestamp = 0;
+    int last_weather_refresh_counter = -1;
 
     bool shouldRefreshDisplay();
     bool shouldRefreshWeather();

@@ -208,6 +208,7 @@ void loop() {
         /*
          * setup done; read and publish values
          */
+        Serial.println("---Start of Measurement Series---");
 
 #if ENABLED_PIR
         int PIRState = digitalRead(PIR);
@@ -357,7 +358,10 @@ void loop() {
         display.refreshWeatherInformation();
         display.refreshDisplay();
 #endif
+
+        Serial.println("---End of Measurement Series-----");
+
         // Delay each Measurement a bit
-        delay(2000);
+        delay(3000);
     }
 }

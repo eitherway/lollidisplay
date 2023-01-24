@@ -57,22 +57,17 @@ void Display::refreshWeatherInformation() {
 }
 
 bool Display::shouldRefreshWeather() {
-#ifdef ESP8266
-    unsigned int current_time = sntp_get_current_timestamp();
-#endif
-#ifdef ESP32
-    unsigned int current_time = 0;
-#endif
-
     bool shouldRefresh = false;
-    if ((current_time - 15 * 60) > last_weather_refresh_timestamp) {
-        // longer than 15min since last refresh
-        //Serial.println("Time: ");
-        //Serial.println(current_time);
+
+    if (last_weather_refresh_counter == -1) {
         shouldRefresh = true;
+    } else if (last_weather_refresh_counter > 100) {
+        shouldRefresh = true;
+        last_weather_refresh_counter = -1;
     }
 
-    last_weather_refresh_timestamp = current_time;
+    last_weather_refresh_counter++;
+
     return shouldRefresh;
 }
 
