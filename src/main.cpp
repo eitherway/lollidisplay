@@ -356,6 +356,7 @@ void loop() {
 
 #if ENABLED_EPD
         display.refreshWeatherInformation();
+        display.refreshSunset();
         display.refreshDisplay();
 #endif
 

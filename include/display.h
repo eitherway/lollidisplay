@@ -30,27 +30,38 @@
 #define EPD_CLK 2
 #endif
 
-class Display{
+class Display {
 public:
     Display();
+
     void initDisplay(WiFiClient clientParam);
+
     void refreshDisplay();
+
     void setCO2(int co2Param);
+
     void refreshWeatherInformation();
+
+    void refreshSunset();
+
 private:
+    unsigned int last_refresh_timestamp = 0;
+    bool shouldRefreshDisplay();
+
     int co2 = -1;
     int displayedCO2 = 0;
 
-    String weatherStr;
-    String displayedWeatherStr;
-
     WiFiClient client;
 
-    unsigned int last_refresh_timestamp = 0;
+    String weatherStr;
+    String displayedWeatherStr;
     int last_weather_refresh_counter = -1;
-
-    bool shouldRefreshDisplay();
     bool shouldRefreshWeather();
+
+    String sunsetString;
+    String displayedSunsetString;
+    int last_sunset_refresh_counter = -1;
+    bool shouldRefreshSunset();
 };
 
 #endif

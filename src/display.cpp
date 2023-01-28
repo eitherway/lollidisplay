@@ -71,6 +71,51 @@ bool Display::shouldRefreshWeather() {
     return shouldRefresh;
 }
 
+void Display::refreshSunset() {
+    if (!shouldRefreshSunset()) {
+        return;
+    }
+
+    HTTPClient http;
+
+    String serverPath = SECRET_COLLECTOR_SERVER "/sunset";
+
+    // Your Domain name with URL path or IP address with path
+    http.begin(client, serverPath.c_str());
+
+    // Send HTTP GET request
+    int httpResponseCode = http.GET();
+
+    if (httpResponseCode == 200) {
+        sunsetString = http.getString();
+        Serial.println("Sunset: " + sunsetString);
+    } else if (httpResponseCode > 0) {
+        Serial.print("HTTP Response code: ");
+        Serial.println(httpResponseCode);
+    } else {
+        Serial.print("HTTP Error code: ");
+        Serial.println(httpResponseCode);
+    }
+
+    // Free resources
+    http.end();
+}
+
+bool Display::shouldRefreshSunset() {
+    bool shouldRefresh = false;
+
+    if (last_sunset_refresh_counter == -1) {
+        shouldRefresh = true;
+    } else if (last_sunset_refresh_counter > 100) {
+        shouldRefresh = true;
+        last_sunset_refresh_counter = -1;
+    }
+
+    last_sunset_refresh_counter++;
+
+    return shouldRefresh;
+}
+
 bool Display::shouldRefreshDisplay() {
 #ifdef ESP8266
     unsigned int current_time = sntp_get_current_timestamp();
@@ -93,6 +138,10 @@ bool Display::shouldRefreshDisplay() {
     }
 
     if (weatherStr != displayedWeatherStr) {
+        refreshDisplay = true;
+    }
+
+    if (sunsetString != displayedSunsetString) {
         refreshDisplay = true;
     }
 
@@ -161,9 +210,23 @@ void Display::refreshDisplay() {
     String co2Str = String(co2);
     EPD.println(co2Str);
 
+    // print Sunset Time
+    EPD.setTextColor(EPD_BLACK);
+    EPD.setTextSize(2);
+    EPD.setCursor(100, 96);
+
+    if (sunsetString.length() == 5) {
+        EPD.println(sunsetString);
+    } else {
+        sunsetString = "error";
+        EPD.println("error");
+    }
+
     EPD.display();
 
+    // update info for refresh algorithm
     displayedCO2 = co2;
     displayedWeatherStr = weatherStr;
+    displayedSunsetString = sunsetString;
 }
 
