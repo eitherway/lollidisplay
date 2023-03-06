@@ -105,7 +105,6 @@ void setup() {
     Serial.begin(9600);
     Serial.println("");
 
-    Serial.println(SECRET_SSID);
     // Set WiFi hostname
     WiFi.mode(WIFI_STA); //Indicate to act as wifi_client only
     WiFi.hostname(HOSTNAME); // needs to be set after Wifi.mode before Wifi.begin
@@ -121,7 +120,12 @@ void setup() {
 
     // Initialize CO2
 #if ENABLED_CO2
+#ifdef ARDUINO_LOLIN_C3_MINI
+    co2.CO2_Init(6, 7, 9600);
+#endif
+#ifdef ARDUINO_ESP8266_WEMOS_D1MINI
     co2.CO2_Init(D4, D3, 9600);
+#endif
 #endif
 
     // Initialise LED
