@@ -14,6 +14,8 @@ Feel free to use this project as an inspiration for your own ESP Project. Be awa
 
 To disable or enable the various sensors, please see `include/secrets.example.h`
 
+This project evolved and now also displays the sunset information. This information together with the weather data is provided by a Raspberry Pi. For more information visit the [Lollicollector Repository](https://github.com/eitherway/lollicollector).
+
 ## Wiring / Pins Used
 
 ### I2C Sensors, Display: Light Sensor, SHT30, SGP30, HP303B 
